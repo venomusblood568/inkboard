@@ -22,7 +22,11 @@ export function middleware(req:AuthRequest,res:Response, next:NextFunction){
         return
     }
     try {
-        const decoded = jwt.verify(token, JWT_SECRET as string) as JwtPayload;
+        
+        const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+        if (typeof decoded == "string") {
+          return;
+        }
         req.user = decoded;
         next();
     } catch (error) {
