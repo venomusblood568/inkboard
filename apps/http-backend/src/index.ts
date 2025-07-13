@@ -1,11 +1,12 @@
 import express from "express";
 import { Middleware } from "./middleware";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import { JWT_SECRET } from "@repo/backend-common/config";
 
-import { ENV } from "@repo/config";
-
+dotenv.config();
 const app = express();
-const JWT_SECRET = ENV.JWT_SECRET;
+
 if (!JWT_SECRET) {
   throw new Error(`JWT_SECRET must be defined in env variable.`);
 }
@@ -28,10 +29,9 @@ app.post("/api/signin", (req, res) => {
 });
 
 app.post("/api/create-room", Middleware, (req, res) => {
-  res.status(200).json({
-    message: `Room created`,
-    roomId: 123,
-  });
+  res.status(200).json({ 
+    message: `Room created`, 
+    roomId: 123 });
 });
 
 app.listen(8888, () => {

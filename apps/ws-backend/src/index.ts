@@ -1,9 +1,7 @@
 import { WebSocketServer } from "ws";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
+import { JWT_SECRET } from "@repo/backend-common/config";
 
-import { ENV } from "@repo/config";
-
-const JWT_SECRET = ENV.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error(`JWT_SECRET must be defined in env variable.`);
 }
@@ -19,7 +17,11 @@ wss.on("connection", function connection(ws, request) {
   const qureryParams = new URLSearchParams(url.split("?")[1]);
   const token = qureryParams.get("token")|| "";
   const decoded = jwt.verify(token, JWT_SECRET);
-  if(!decoded || !(decoded as JwtPayload).userId){
+  if(typeof decoded === "string"){
+    ws.close()
+    return
+  }
+  if(!decoded || !decoded.userId){
     ws.close();
     return;
   }

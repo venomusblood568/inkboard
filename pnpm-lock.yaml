@@ -20,9 +20,9 @@ importers:
 
   apps/http-backend:
     dependencies:
-      '@repo/config':
+      '@repo/backend-common':
         specifier: workspace:*
-        version: link:../../packages/config
+        version: link:../../packages/backend-common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -81,9 +81,9 @@ importers:
 
   apps/ws-backend:
     dependencies:
-      '@repo/config':
+      '@repo/backend-common':
         specifier: workspace:*
-        version: link:../../packages/config
+        version: link:../../packages/backend-common
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -100,11 +100,15 @@ importers:
         specifier: ^8.18.3
         version: 8.18.3
 
-  packages/config:
+  packages/backend-common:
     dependencies:
-      dotenv:
-        specifier: ^17.2.0
-        version: 17.2.0
+      '@types/node':
+        specifier: ^22.15.3
+        version: 22.15.3
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
 
   packages/eslint-config:
     devDependencies:
