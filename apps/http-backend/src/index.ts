@@ -1,11 +1,11 @@
 import express from "express";
 import { Middleware } from "./middleware";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 
-dotenv.config();
+import { ENV } from "@repo/config";
+
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = ENV.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error(`JWT_SECRET must be defined in env variable.`);
 }

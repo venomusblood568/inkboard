@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import { ENV } from "@repo/config";
 
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = ENV.JWT_SECRET;
 if (!JWT_SECRET) {
   throw new Error("JWT_SECRET must be defined in .env");
 }
