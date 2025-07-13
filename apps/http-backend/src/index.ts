@@ -3,8 +3,13 @@ import { Middleware } from "./middleware";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { JWT_SECRET } from "@repo/backend-common/config";
-import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
-import {prismaClient} from "@repo/db/client";
+import {
+  CreateRoomSchema,
+  CreateUserSchema,
+  SigninSchema,
+} from "@repo/common/types";
+import { prismaClient } from "@repo/db/client";
+import bcrypt from "bcrypt";
 
 dotenv.config();
 const app = express();
@@ -17,55 +22,81 @@ if (!JWT_SECRET) {
 app.use(express.json());
 
 app.post("/api/signup", async (req, res) => {
-  const parcedData = CreateUserSchema.safeParse(req.body);
-  if(!parcedData.success){
-    return res.json({
-      message:"Incorrect Inputs"
-    })
+  const parsedData = CreateUserSchema.safeParse(req.body);
+  if (!parsedData.success) {
+    return res.status(401).json({
+      message: "Invalid Inputs",
+    });
   }
+
+  const { username, password, name } = parsedData.data;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   try {
-    await prismaClient.user.create({
+    const user = await prismaClient.user.create({
       data: {
-        email: parcedData.data?.username,
-        password: parcedData.data?.password,
-        name: parcedData.data?.name,
+        username: username,
+        password: hashedPassword,
+        name,
       },
     });
-    res.status(200).json({ message: "User signUp" });
+    res.status(200).json({ message: "User signUp", userId: user.id });
   } catch (error) {
     res.status(411).json({
-      message:"User already exits with same email or internal error"
-    })
+      message: "User already exits with same email or internal error",
+    });
   }
 });
 
-app.post("/api/signin", (req, res) => {
-  
-  const data = SigninSchema.safeParse(req.body);
-  if(!data.success){
-    res.json({
-      message:"Incorrect Inputs"
-    })
-    return;
+app.post("/api/signin", async (req, res) => {
+  const parcedData = SigninSchema.safeParse(req.body);
+  if (!parcedData.success) {
+    return res.status(401).json({
+      message: "Invalid Inputs",
+    });
   }
-
-  const userId = 1;
-  const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
-  res.status(200).json({ message: "User Logged In", token });
+  const { username, password } = parcedData.data;
+  try {
+    const user = await prismaClient.user.findUnique({
+      where: { username },
+    });
+    if (!user) {
+      res.status(401).json({
+        message: "Invaild credentials",
+      });
+      return;
+    }
+    const passwordCorrect = await bcrypt.compare(password, user.password);
+    if (!passwordCorrect) {
+      res.status(401).json({
+        message: "Invalid Credentials",
+      });
+      return;
+    }
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
+      expiresIn: "1h",
+    });
+    res.status(200).json({ message: "User Logged In", token });
+  } catch (error) {
+    res.status(500).json({
+      message: "Intenal Server Error",
+    });
+  }
 });
 
 app.post("/api/create-room", Middleware, (req, res) => {
   const data = CreateRoomSchema.safeParse(req.body);
-  if(!data.success){
+  if (!data.success) {
     res.json({
-      message:"Incorrect Inputs"
-    })
-    return
+      message: "Incorrect Inputs",
+    });
+    return;
   }
-  
-  res.status(200).json({ 
-    message: `Room created`, 
-    roomId: 123 });
+
+  res.status(200).json({
+    message: `Room created`,
+    roomId: 123,
+  });
 });
 
 app.listen(8888, () => {
