@@ -84,19 +84,33 @@ app.post("/api/signin", async (req, res) => {
   }
 });
 
-app.post("/api/create-room", Middleware, (req, res) => {
-  const data = CreateRoomSchema.safeParse(req.body);
-  if (!data.success) {
+app.post("/api/create-room", Middleware, async(req, res) => {
+  const parsedData = CreateRoomSchema.safeParse(req.body);
+  if (!parsedData.success) {
     res.json({
       message: "Incorrect Inputs",
     });
     return;
   }
-
-  res.status(200).json({
-    message: `Room created`,
-    roomId: 123,
-  });
+  const userId = req.userId;
+  if(!userId){
+    res.status(401).json({message:"Unauthorized: Missing user Id"})
+    return
+  }
+  try {
+    const room = await prismaClient.room.create({
+      data: {
+        slug: parsedData.data.name,
+        adminId: userId,
+      },
+    });
+    res.status(200).json({
+      message: `Room created`,
+      roomId: room.id,
+    });
+  } catch (error) {
+    res.status(500).json({"message":"room already exits with same name"})
+  }
 });
 
 app.listen(8888, () => {
