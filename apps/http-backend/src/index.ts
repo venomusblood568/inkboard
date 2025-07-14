@@ -113,6 +113,26 @@ app.post("/api/create-room", Middleware, async(req, res) => {
   }
 });
 
+app.get("/api/chats/:roomId", async(req,res)=>{
+  try {
+    const roomId = Number(req.params.roomId);
+    const messages = await prismaClient.chat.findMany({
+      where: {
+        roomId: roomId,
+      },
+      orderBy: {
+        id: "desc",
+      },
+      take: 50,
+    });
+    res.status(200).json({
+      messages,
+    });
+  } catch (error) {
+    res.status(500).json({"message":"Internal Error"})
+  }
+})
+
 app.listen(8888, () => {
   console.log(`Http-backend is running on http://localhost:8888`);
 });
