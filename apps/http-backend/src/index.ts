@@ -14,12 +14,18 @@ import bcrypt from "bcrypt";
 dotenv.config();
 const app = express();
 
+const PORT = 8181
+
 if (!JWT_SECRET) {
   throw new Error(`JWT_SECRET must be defined in env variable.`);
 }
 
 // allow JSON body parsing
 app.use(express.json());
+
+app.get("/test", (req, res) => {
+  res.send("✅ Express backend is working");
+});
 
 app.post("/api/signup", async (req, res) => {
   const parsedData = CreateUserSchema.safeParse(req.body);
@@ -133,6 +139,26 @@ app.get("/api/chats/:roomId", async(req,res)=>{
   }
 })
 
-app.listen(8888, () => {
-  console.log(`Http-backend is running on http://localhost:8888`);
+app.get("/api/room/:slug", async(req ,res) => {
+  const slug = req.params.slug;
+  console.log("Slug requested:", slug);
+  try {
+    const room = await prismaClient.room.findFirst({
+      where:{
+        slug
+      }
+    })
+    res.status(200).json({
+      room
+    })
+  } catch (error) {
+    console.log(`Something went wrong:`,error)
+    res.status(401).json({
+      message:"Something went worng"
+    })
+  }
+})
+
+app.listen(PORT, () => {
+  console.log(`Http-backend is running on http://localhost:${PORT}`);
 });
