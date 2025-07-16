@@ -17,7 +17,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [formData, setFormData] = React.useState({
     name: "",
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -31,6 +31,31 @@ export default function Signup() {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  const handleSubmit = async(e:{preventDefault:() => void}) =>{
+    e.preventDefault();
+    try {
+        const response = await fetch("http://localhost:8181/api/signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            username: formData.username,
+            password: formData.password,
+          }),
+        });
+        const data = await response.json()
+        if(response.ok){
+            router.push("/signin");
+        }else{
+            alert(data.error ||"Signup failed") 
+        }
+    } catch (error) {
+        console.log(error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
@@ -92,10 +117,10 @@ export default function Signup() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   placeholder="Enter your username"
@@ -141,6 +166,7 @@ export default function Signup() {
             {/* Submit Button */}
             <button
               type="submit"
+              onClick={handleSubmit}
               className="w-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600 text-white py-3 rounded-xl text-lg font-bold hover:from-purple-700 hover:via-cyan-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-2xl hover:shadow-purple-500/25 flex items-center justify-center group"
             >
               Create Account

@@ -10,10 +10,16 @@ import {
 } from "@repo/common/types";
 import { prismaClient } from "@repo/db/client";
 import bcrypt from "bcrypt";
+import cors from "cors";
 
 dotenv.config();
 const app = express();
-
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 const PORT = 8181
 
 if (!JWT_SECRET) {
