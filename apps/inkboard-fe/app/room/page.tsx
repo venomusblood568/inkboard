@@ -1,12 +1,13 @@
 "use client"
-import React from "react";
-import { Plus, Users, Trash2, LogIn, LogOut, User } from "lucide-react";
-
+import { useEffect,useState } from "react";
+import { Plus, Trash2, LogIn, LogOut, User } from "lucide-react";
+import {useRouter} from "next/navigation";
 export default function CreateRoom() {
-  const [roomName, setRoomName] = React.useState("");
-  const [joinCode, setJoinCode] = React.useState("");
-  const [userName] = React.useState("John Doe");
-  const [rooms, setRooms] = React.useState([
+  const router = useRouter()
+  const [roomName, setRoomName] = useState("");
+  const [joinCode, setJoinCode] = useState("");
+  const [username, setUsername] = useState<string | null>(null);
+  const [rooms, setRooms] = useState([
     {
       id: 1,
       name: "Design Brainstorm",
@@ -21,43 +22,18 @@ export default function CreateRoom() {
     },
   ]);
 
-  const generateRoomCode = () => {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
+  //setusername
+  useEffect(() => {
+    const storedusername = localStorage.getItem("username");
+    setUsername(storedusername);
+  },[])
 
-  const createRoom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (roomName.trim()) {
-      const newRoom = {
-        id: rooms.length + 1,
-        name: roomName,
-        code: generateRoomCode(),
-        participants: 1,
-      };
-      setRooms([newRoom, ...rooms]);
-      setRoomName("");
-    }
-  };
-
-  const joinRoom = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (joinCode.trim()) {
-      const room = rooms.find(
-        (r) => r.code.toLowerCase() === joinCode.toLowerCase()
-      );
-      if (room) {
-        alert(`Joined: ${room.name}`);
-        setJoinCode("");
-      } else {
-        alert("Room not found");
-      }
-    }
-  };
-
-  const deleteRoom = (id: number) => {
-    setRooms(rooms.filter((room) => room.id !== id));
-  };
-
+  //logout
+  const logouthandler = () => {
+    localStorage.removeItem("token")
+    router.push("/signin");
+  }
+  
   return (
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-2xl mx-auto">
@@ -75,11 +51,15 @@ export default function CreateRoom() {
               <User className="h-5 w-5 text-white" />
             </div>
             <div>
-              <p className="text-white font-semibold">{userName}</p>
+              <p className="text-white font-semibold">
+                {username ? `${username}` : "Loading..."}
+              </p>
               <p className="text-gray-400 text-sm">Welcome back!</p>
             </div>
           </div>
-          <button className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl transition-all border border-red-600/30">
+          <button 
+            onClick={logouthandler}
+            className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl transition-all border border-red-600/30">
             <LogOut className="h-4 w-4" />
             Logout
           </button>
@@ -92,7 +72,7 @@ export default function CreateRoom() {
             <h3 className="text-xl font-semibold mb-6 text-purple-400">
               Create Room
             </h3>
-            <form onSubmit={createRoom} className="space-y-4">
+            <form  className="space-y-4">
               <input
                 type="text"
                 value={roomName}
@@ -116,7 +96,7 @@ export default function CreateRoom() {
             <h3 className="text-xl font-semibold mb-6 text-cyan-400">
               Join Room
             </h3>
-            <form onSubmit={joinRoom} className="space-y-4">
+            <form  className="space-y-4">
               <input
                 type="text"
                 value={joinCode}
@@ -155,14 +135,12 @@ export default function CreateRoom() {
                     <h4 className="font-semibold text-white text-lg">
                       {room.name}
                     </h4>
-                    
                   </div>
                   <div className="flex items-center gap-3">
                     <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                       Open
                     </button>
                     <button
-                      onClick={() => deleteRoom(room.id)}
                       className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/20 rounded-lg transition-all"
                     >
                       <Trash2 className="h-5 w-5" />
