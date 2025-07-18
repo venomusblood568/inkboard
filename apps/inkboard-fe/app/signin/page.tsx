@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React from "react";
 import {
   Pen,
@@ -9,7 +9,7 @@ import {
   Sparkles,
   ArrowRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 
 export default function Signin() {
   const router = useRouter();
@@ -28,31 +28,32 @@ export default function Signin() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  };  
-  const handleSubmit = async(e:{preventDefault:() => void}) =>{
-    e.preventDefault()
+  };
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    e.preventDefault();
     try {
-      const response = await fetch("http://localhost:8181/api/signin",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json",
+      const response = await fetch("http://localhost:8181/api/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        body:JSON.stringify({
-          username:formData.username,
-          password:formData.password
-        })
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+        }),
       });
       const data = await response.json();
-      if(response.ok){
-        localStorage.setItem("token",data.token);
-        router.push("/room")
-      }else{
-        alert(data.error|| "Signin Failed")
+      if (response.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("username",data.username);
+        router.push("/room");
+      } else {
+        alert(data.error || "Signin Failed");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
@@ -80,8 +81,6 @@ export default function Signin() {
         {/* Signup Form */}
         <div className="bg-gray-900/50 backdrop-blur-md rounded-3xl shadow-2xl p-8 border border-gray-700">
           <form className="space-y-6">
-
-
             <div>
               <label
                 htmlFor="username"
@@ -121,7 +120,7 @@ export default function Signin() {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-12 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
-                  placeholder="Create a strong password"
+                  placeholder="Enter your Password"
                   required
                 />
                 <button
@@ -144,10 +143,9 @@ export default function Signin() {
               onClick={handleSubmit}
               className="w-full bg-gradient-to-r from-purple-600 via-cyan-600 to-pink-600 text-white py-3 rounded-xl text-lg font-bold hover:from-purple-700 hover:via-cyan-700 hover:to-pink-700 transition-all transform hover:scale-105 shadow-2xl hover:shadow-purple-500/25 flex items-center justify-center group"
             >
-              Create Account
+              Login
               <Sparkles className="ml-2 h-5 w-5 group-hover:animate-spin" />
             </button>
-           
           </form>
 
           {/* Login Link */}

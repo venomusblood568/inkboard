@@ -88,7 +88,7 @@ app.post("/api/signin", async (req, res) => {
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, {
       expiresIn: "1h",
     });
-    res.status(200).json({ message: "User Logged In", token });
+    res.status(200).json({ message: "User Logged In", username,token });
   } catch (error) {
     res.status(500).json({
       message: "Intenal Server Error",
@@ -124,6 +124,25 @@ app.post("/api/create-room", Middleware, async(req, res) => {
     res.status(500).json({"message":"room already exits with same name"})
   }
 });
+
+app.get("/api/roomlist",Middleware,async(req,res) => {
+  try {
+    const userId = req.userId;
+    if(!userId){
+      res.status(401).json({error:"Unauthorized"});
+    }
+    const rooms = await prismaClient.room.findMany({
+      where:{
+        adminId: userId
+      }
+    })
+    res.status(200).json({rooms})
+  } catch (error) {
+    console.log(`Error fecthing room list:`,error);
+    res.status(500).json({error: `Internal Server Error`})
+    
+  }
+})
 
 app.get("/api/chats/:roomId", async(req,res)=>{
   try {
