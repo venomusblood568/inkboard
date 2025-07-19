@@ -134,6 +134,9 @@ app.get("/api/roomlist",Middleware,async(req,res) => {
     const rooms = await prismaClient.room.findMany({
       where:{
         adminId: userId
+      },
+      select:{
+        slug:true
       }
     })
     res.status(200).json({rooms})

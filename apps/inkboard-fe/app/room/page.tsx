@@ -28,32 +28,22 @@ export default function CreateRoom() {
   };
 
   // Fetch room list
+ const fetchRooms = async () => {
+   const token = localStorage.getItem("token");
+   if (!token) return;
+
+   try {
+     const res = await fetch("http://localhost:8181/api/roomlist", {
+       headers: { Authorization: `Bearer ${token}` },
+     });
+     const data = await res.json();
+     if (res.ok && data.rooms) setRooms(data.rooms);
+   } catch (error) {
+     console.error("Fetch error:", error);
+   }
+ };
+
   useEffect(() => {
-    const fetchRooms = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.warn("No token found");
-        return;
-      }
-
-      try {
-        const res = await fetch("http://localhost:8181/api/roomlist", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-        if (res.ok && data.rooms) {
-          setRooms(data.rooms);
-        } else {
-          console.error("Failed to fetch rooms");
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-      }
-    };
-
     fetchRooms();
   }, []);
 
@@ -80,9 +70,7 @@ export default function CreateRoom() {
       if (res.ok && data.room) {
         setRooms((prev) => [...prev, data.room]);
         setRoomName("");
-      } else {
-        console.error("Room creation failed:", data.message);
-      }
+      } 
     } catch (error) {
       console.error("Create room error:", error);
     }
