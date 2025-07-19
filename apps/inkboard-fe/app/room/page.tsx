@@ -2,26 +2,17 @@
 import { useEffect,useState } from "react";
 import { Plus, Trash2, LogIn, LogOut, User } from "lucide-react";
 import {useRouter} from "next/navigation";
+
+type RoomlistType = {
+  slug: string
+}
+
 export default function CreateRoom() {
   const router = useRouter()
   const [roomName, setRoomName] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [username, setUsername] = useState<string | null>(null);
-  const [rooms, setRooms] = useState([
-    {
-      id: 1,
-      name: "Design Brainstorm",
-      code: "ABC123",
-      participants: 3,
-    },
-    {
-      id: 2,
-      name: "Project Planning",
-      code: "XYZ789",
-      participants: 5,
-    },
-  ]);
-
+  const [rooms, setRooms] = useState<RoomlistType[]>([]);
   //setusername
   useEffect(() => {
     const storedusername = localStorage.getItem("username");
@@ -34,8 +25,41 @@ export default function CreateRoom() {
     router.push("/signin");
   }
   
+  //fetch RoomList
+  useEffect(() => {
+    const fetchList = async () => {
+      const token = localStorage.getItem("token");
+      if(!token){
+        console.warn(`No token Found`);
+        return;
+      }
+      try {
+        const res = await fetch("http://localhost:8181/api/roomlist",{
+          headers:{
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if(res.ok && data.rooms){
+          setRooms(data.rooms);
+        }else{
+          console.error("Error fetching room list");
+        }
+      } catch (error) {
+        console.log("Fetching error",error)
+      }
+    }
+    fetchList();
+  },[])
+
   return (
     <div className="min-h-screen bg-black text-white p-8">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-purple-600/20 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-cyan-600/20 rounded-full blur-xl animate-bounce"></div>
+        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-600/20 rounded-full blur-lg animate-pulse delay-1000"></div>
+      </div>
       <div className="max-w-2xl mx-auto">
         {/* Header with Name and Logout */}
 
@@ -57,9 +81,10 @@ export default function CreateRoom() {
               <p className="text-gray-400 text-sm">Welcome back!</p>
             </div>
           </div>
-          <button 
+          <button
             onClick={logouthandler}
-            className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl transition-all border border-red-600/30">
+            className="flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 px-4 py-2 rounded-xl transition-all border border-red-600/30"
+          >
             <LogOut className="h-4 w-4" />
             Logout
           </button>
@@ -72,7 +97,7 @@ export default function CreateRoom() {
             <h3 className="text-xl font-semibold mb-6 text-purple-400">
               Create Room
             </h3>
-            <form  className="space-y-4">
+            <form className="space-y-4">
               <input
                 type="text"
                 value={roomName}
@@ -96,7 +121,7 @@ export default function CreateRoom() {
             <h3 className="text-xl font-semibold mb-6 text-cyan-400">
               Join Room
             </h3>
-            <form  className="space-y-4">
+            <form className="space-y-4">
               <input
                 type="text"
                 value={joinCode}
@@ -128,21 +153,23 @@ export default function CreateRoom() {
             <div className="space-y-3">
               {rooms.map((room) => (
                 <div
-                  key={room.id}
+                  key={room.slug}
                   className="bg-gray-800/50 rounded-xl p-4 flex items-center justify-between hover:bg-gray-800/70 transition-all"
                 >
                   <div>
                     <h4 className="font-semibold text-white text-lg">
-                      {room.name}
+                      {room.slug}
                     </h4>
+                    <p className="text-gray-400 text-sm">Code: {room.slug}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    <button
+                      onClick={() => router.push(`/room/${room.slug}`)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                    >
                       Open
                     </button>
-                    <button
-                      className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/20 rounded-lg transition-all"
-                    >
+                    <button className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/20 rounded-lg transition-all">
                       <Trash2 className="h-5 w-5" />
                     </button>
                   </div>
