@@ -1,74 +1,111 @@
-"use client"
-import { useEffect,useState } from "react";
-import { Plus, Trash2, LogIn, LogOut, User } from "lucide-react";
-import {useRouter} from "next/navigation";
+"use client";
 
-type RoomlistType = {
-  slug: string
-}
+import React, { useEffect, useState } from "react";
+import { Plus, Trash2, LogOut, User, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+type RoomType = {
+  slug: string;
+};
 
 export default function CreateRoom() {
-  const router = useRouter()
-  const [roomName, setRoomName] = useState("");
-  const [joinCode, setJoinCode] = useState("");
+  const router = useRouter();
+  const [roomName, setRoomName] = useState<string>("");
+  const [joinCode, setJoinCode] = useState<string>("");
   const [username, setUsername] = useState<string | null>(null);
-  const [rooms, setRooms] = useState<RoomlistType[]>([]);
-  //setusername
-  useEffect(() => {
-    const storedusername = localStorage.getItem("username");
-    setUsername(storedusername);
-  },[])
+  const [rooms, setRooms] = useState<RoomType[]>([]);
 
-  //logout
-  const logouthandler = () => {
-    localStorage.removeItem("token")
-    router.push("/signin");
-  }
-  
-  //fetch RoomList
+  // Get username from localStorage
   useEffect(() => {
-    const fetchList = async () => {
+    const storedUsername = localStorage.getItem("username");
+    setUsername(storedUsername);
+  }, []);
+
+  // Logout handler
+  const logouthandler = () => {
+    localStorage.removeItem("token");
+    router.push("/signin");
+  };
+
+  // Fetch room list
+  useEffect(() => {
+    const fetchRooms = async () => {
       const token = localStorage.getItem("token");
-      if(!token){
-        console.warn(`No token Found`);
+      if (!token) {
+        console.warn("No token found");
         return;
       }
+
       try {
-        const res = await fetch("http://localhost:8181/api/roomlist",{
-          headers:{
+        const res = await fetch("http://localhost:8181/api/roomlist", {
+          headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
         const data = await res.json();
-        if(res.ok && data.rooms){
+        if (res.ok && data.rooms) {
           setRooms(data.rooms);
-        }else{
-          console.error("Error fetching room list");
+        } else {
+          console.error("Failed to fetch rooms");
         }
       } catch (error) {
-        console.log("Fetching error",error)
+        console.error("Fetch error:", error);
       }
+    };
+
+    fetchRooms();
+  }, []);
+
+  // Create room
+  const createRoomHandler = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.warn("No token found");
+      return;
     }
-    fetchList();
-  },[])
+
+    try {
+      const res = await fetch("http://localhost:8181/api/create-room", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name: roomName }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.room) {
+        setRooms((prev) => [...prev, data.room]);
+        setRoomName("");
+      } else {
+        console.error("Room creation failed:", data.message);
+      }
+    } catch (error) {
+      console.error("Create room error:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white p-8">
-      {/* Animated background elements */}
-      <div className="absolute inset-0">
+      {/* Background */}
+      <div className="absolute inset-0 -z-10">
         <div className="absolute top-20 left-20 w-32 h-32 bg-purple-600/20 rounded-full blur-xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-40 h-40 bg-cyan-600/20 rounded-full blur-xl animate-bounce"></div>
         <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-pink-600/20 rounded-full blur-lg animate-pulse delay-1000"></div>
       </div>
-      <div className="max-w-2xl mx-auto">
-        {/* Header with Name and Logout */}
 
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 mb-4">
             Rooms
           </h1>
         </div>
+
+        {/* User Info & Logout */}
         <div className="flex justify-between items-center mb-8 bg-gray-900/50 backdrop-blur-md rounded-2xl p-4 border border-gray-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-cyan-600 rounded-full flex items-center justify-center">
@@ -76,7 +113,7 @@ export default function CreateRoom() {
             </div>
             <div>
               <p className="text-white font-semibold">
-                {username ? `${username}` : "Loading..."}
+                {username ?? "Loading..."}
               </p>
               <p className="text-gray-400 text-sm">Welcome back!</p>
             </div>
@@ -90,21 +127,21 @@ export default function CreateRoom() {
           </button>
         </div>
 
-        {/* Create & Join Forms */}
+        {/* Create & Join Room */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          {/* Create Room */}
+          {/* Create */}
           <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
             <h3 className="text-xl font-semibold mb-6 text-purple-400">
               Create Room
             </h3>
-            <form className="space-y-4">
+            <form onSubmit={createRoomHandler} className="space-y-4">
               <input
                 type="text"
                 value={roomName}
                 onChange={(e) => setRoomName(e.target.value)}
                 placeholder="Enter room name"
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 required
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400"
               />
               <button
                 type="submit"
@@ -116,7 +153,7 @@ export default function CreateRoom() {
             </form>
           </div>
 
-          {/* Join Room */}
+          {/* Join */}
           <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
             <h3 className="text-xl font-semibold mb-6 text-cyan-400">
               Join Room
@@ -127,8 +164,8 @@ export default function CreateRoom() {
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
                 placeholder="Enter room code"
-                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 required
+                className="w-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-400"
               />
               <button
                 type="submit"
@@ -144,7 +181,6 @@ export default function CreateRoom() {
         {/* Room List */}
         <div className="bg-gray-900/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
           <h3 className="text-xl font-semibold mb-6 text-white">Your Rooms</h3>
-
           {rooms.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
               No rooms yet. Create your first room!
@@ -163,10 +199,7 @@ export default function CreateRoom() {
                     <p className="text-gray-400 text-sm">Code: {room.slug}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => router.push(`/room/${room.slug}`)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-                    >
+                    <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                       Open
                     </button>
                     <button className="text-red-400 hover:text-red-300 p-2 hover:bg-red-900/20 rounded-lg transition-all">
